@@ -46,8 +46,10 @@
     padding:12px; font-size:14px; font-weight:700; margin-bottom:8px; font-family:inherit;
   }
   .btn.ghost { background:none; border:1px solid #2a2a30; color:#cfc7b8; font-weight:400; }
+  .btn:disabled { opacity:.6; }
   #a-msg { font-size:12px; color:#f87171; min-height:16px; }
   #st-msg { font-size:12px; color:#f87171; min-height:16px; }
+  #v-msg { font-size:12px; color:#f87171; min-height:16px; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
   .pchip {
     background:#0e0e10; border:1px solid #2a2a30; color:#cfc7b8;
@@ -89,6 +91,16 @@
     padding:2px 6px; border-radius:999px;
   }
   .jmeta { font-size:11px; color:#6f6a5e; margin-top:8px; }
+  .bigbal { text-align:center; padding:8px 0 12px; }
+  .bigbal span { font-size:46px; color:#f2b705; font-weight:700; }
+  .bigbal small { display:block; color:#6f6a5e; font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+  .mv { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #232328; font-size:13px; }
+  .mv:last-child { border-bottom:none; }
+  .mv .d { color:#cfc7b8; }
+  .mv .when { font-size:10px; color:#6f6a5e; display:block; margin-top:2px; }
+  .mv .amt { margin-left:auto; font-weight:700; white-space:nowrap; }
+  .mv .amt.plus { color:#4ade80; }
+  .mv .amt.minus { color:#f87171; }
   nav {
     position:fixed; bottom:0; left:0; right:0; z-index:10;
     background:#121215; border-top:1px solid #232328;
@@ -144,8 +156,8 @@
 
     <div class="card">
       <h2>Coming next</h2>
-      <p>🪙 <b>Block 7:</b> credits vault<br>
-         🧠 <b>Block 8:</b> the real AI brain</p>
+      <p>🔒 <b>Block 8:</b> the great locking — your data, your eyes only<br>
+         🧠 <b>Block 9:</b> the real AI brain (paid renders)</p>
     </div>
   </section>
 
@@ -162,10 +174,12 @@
 
   <!-- VAULT -->
   <section id="tab-vault" style="display:none">
-    <div class="card locked">
-      <div class="big">🪙</div>
-      <h2>Credits vault — opening soon</h2>
-      <p>Your balance, movements and history.<br>Opens in <b>Block 7</b>.</p>
+    <div id="vault-body">
+      <div class="card locked">
+        <div class="big">🪙</div>
+        <h2>Waking the vault…</h2>
+        <p>One moment.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -181,5 +195,6 @@
 <script src="app.js"></script>
 <script src="auth.js"></script>
 <script src="studio.js"></script>
+<script src="vault.js"></script>
 </body>
 </html>
