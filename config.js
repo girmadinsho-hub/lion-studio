@@ -1,11 +1,10 @@
 /* ==========================================
    LION STUDIO — config.js (the bridge)
-   The publishable key below is the PUBLIC
-   door key — safe in the repo.
-   The secret key NEVER goes in any repo file.
+   Publishable key = PUBLIC door key (safe).
+   Secret key NEVER enters a repo file.
    ========================================== */
 window.LION = {
-  SUPABASE_URL: "https://jaivxsqvnumhejfhirrr.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_4iDuh2jHkO9dI5IKEswREQ_5vVoPNqx",
-  APP_VERSION: "0.2"
+  SUPABASE_URL: "REPLACE_ME_PROJECT_URL",
+  SUPABASE_ANON_KEY: "REPLACE_ME_PUBLISHABLE_KEY",
+  APP_VERSION: "0.3"
 };
