@@ -1,5 +1,6 @@
 /* ==========================================
    LION STUDIO — auth.js (the gate)
+   Block 8: welcome stamp can't double-press.
    ========================================== */
 (function(){
   var client = window.lionClient;
@@ -18,12 +19,25 @@
   async function ensureProfile(u){
     var ex = await client.from('creators').select('id').eq('id', u.id).maybeSingle();
     if (ex.data) return;
-    await client.from('creators').insert({
-      id: u.id, email: u.email,
-      display_name: (u.email || 'creator').split('@')[0]
-    });
-    await client.from('wallets').insert({ creator_id: u.id, balance: 30 });
-    await client.from('ledger').insert({ creator_id: u.id, delta: 30, reason: 'Welcome bonus — beta' });
+
+    await client.from('creators').upsert(
+      { id: u.id, email: u.email,
+        display_name: (u.email || 'creator').split('@')[0] },
+      { onConflict: 'id' }
+    );
+    await client.from('wallets').upsert(
+      { creator_id: u.id, balance: 30 },
+      { onConflict: 'creator_id' }
+    );
+
+    var wl = await client.from('ledger').select('id')
+      .eq('creator_id', u.id)
+      .eq('reason', 'Welcome bonus — beta')
+      .limit(1);
+    if (!wl.data || !wl.data.length) {
+      await client.from('ledger')
+        .insert({ creator_id: u.id, delta: 30, reason: 'Welcome bonus — beta' });
+    }
   }
 
   async function showBalance(id){
