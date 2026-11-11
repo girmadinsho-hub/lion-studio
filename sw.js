@@ -6,7 +6,8 @@ var CACHE_NAME = 'lion-studio-v1';
 var ASSETS = [
   './',
   './index.html',
-  './app.js',
+    './app.js',
+  './auth.js',
   './config.js',
   './manifest.json',
   './icon.svg',
