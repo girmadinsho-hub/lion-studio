@@ -21,10 +21,7 @@
   }
   header .logo { font-size:26px; }
   header h1 { font-size:17px; letter-spacing:2px; color:#f2b705; flex:1; text-transform:uppercase; }
-  .chip {
-    font-size:11px; color:#cfc7b8; border:1px solid #2a2a30;
-    padding:3px 8px; border-radius:999px;
-  }
+  .chip { font-size:11px; color:#cfc7b8; border:1px solid #2a2a30; padding:3px 8px; border-radius:999px; }
   #net-dot { width:9px; height:9px; border-radius:50%; background:#4ade80; }
   main { flex:1; padding:20px 16px 90px; max-width:480px; width:100%; margin:0 auto; }
   .card {
@@ -38,7 +35,17 @@
   .bad { color:#f87171; }
   .locked { text-align:center; padding:30px 16px; }
   .locked .big { font-size:44px; margin-bottom:10px; }
-  .locked p { font-size:13px; color:#cfc7b8; line-height:1.6; }
+  input {
+    width:100%; background:#0e0e10; border:1px solid #2a2a30; color:#f5f0e6;
+    border-radius:10px; padding:12px; font-size:14px; margin-bottom:10px; font-family:inherit;
+  }
+  input:focus { outline:none; border-color:#f2b705; }
+  .btn {
+    width:100%; background:#f2b705; color:#0e0e10; border:none; border-radius:10px;
+    padding:12px; font-size:14px; font-weight:700; margin-bottom:8px; font-family:inherit;
+  }
+  .btn.ghost { background:none; border:1px solid #2a2a30; color:#cfc7b8; font-weight:400; }
+  #a-msg { font-size:12px; color:#f87171; min-height:16px; }
   nav {
     position:fixed; bottom:0; left:0; right:0; z-index:10;
     background:#121215; border-top:1px solid #232328;
@@ -65,6 +72,23 @@
   <!-- HOME -->
   <section id="tab-home">
     <div class="card">
+      <h2>Account</h2>
+      <div id="auth-signed-out">
+        <p style="margin-bottom:10px">Sign in to claim your studio seat.<br>New here? Create an account — 30 welcome credits wait inside.</p>
+        <input id="a-email" type="email" placeholder="your email" autocomplete="email">
+        <input id="a-pass" type="password" placeholder="password (6+ characters)" autocomplete="current-password">
+        <button class="btn" id="a-up">Create account</button>
+        <button class="btn ghost" id="a-in">Sign in</button>
+        <div id="a-msg"></div>
+      </div>
+      <div id="auth-signed-in" style="display:none">
+        <p>🦁 <b id="a-name">creator</b><br><span id="a-mail"></span></p>
+        <p style="margin:10px 0">🪙 Credits: <b id="a-balance">…</b></p>
+        <button class="btn ghost" id="a-out">Sign out</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Vitals</h2>
       <div class="status">
         <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
@@ -74,10 +98,10 @@
         <div>📦 Offline pack …… <span id="sw-state">registering…</span></div>
       </div>
     </div>
+
     <div class="card">
       <h2>Coming next</h2>
-      <p>🎬 <b>Block 5:</b> creator sign-in<br>
-         🎥 <b>Block 6:</b> Studio opens (mock mode)<br>
+      <p>🎬 <b>Block 6:</b> Studio opens (mock mode)<br>
          🪙 <b>Block 7:</b> credits vault</p>
     </div>
   </section>
@@ -87,8 +111,7 @@
     <div class="card locked">
       <div class="big">🎬</div>
       <h2>Studio — opening soon</h2>
-      <p>Photo in, cinema out.<br>
-      This door opens in <b>Block 6</b>, after sign-in arrives in <b>Block 5</b>.</p>
+      <p>Photo in, cinema out.<br>This door opens in <b>Block 6</b>.</p>
     </div>
   </section>
 
@@ -97,8 +120,7 @@
     <div class="card locked">
       <div class="big">🪙</div>
       <h2>Credits vault — opening soon</h2>
-      <p>Your balance, movements and history.<br>
-      Opens in <b>Block 7</b>.</p>
+      <p>Your balance, movements and history.<br>Opens in <b>Block 7</b>.</p>
     </div>
   </section>
 </main>
@@ -112,5 +134,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>
