@@ -18,12 +18,19 @@
     font-size:42px; letter-spacing:4px; margin:12px 0 8px;
     color:#f2b705; text-transform:uppercase;
   }
-  .tag { font-size:17px; color:#cfc7b8; margin-bottom:28px; }
+  .tag { font-size:17px; color:#cfc7b8; margin-bottom:20px; }
   .badge {
     display:inline-block; padding:8px 16px; border:1px solid #f2b705;
     border-radius:999px; color:#f2b705; font-size:13px; letter-spacing:1px;
   }
-  .foot { margin-top:40px; font-size:12px; color:#6f6a5e; }
+  .status {
+    margin-top:24px; background:#17171b; border:1px solid #2a2a30;
+    border-radius:12px; padding:14px; text-align:left; font-size:13px;
+  }
+  .status div { padding:4px 0; color:#cfc7b8; }
+  .ok  { color:#4ade80; }
+  .bad { color:#f87171; }
+  .foot { margin-top:28px; font-size:12px; color:#6f6a5e; }
 </style>
 </head>
 <body>
@@ -31,8 +38,50 @@
     <div class="lion">🦁</div>
     <h1>Lion Studio</h1>
     <div class="tag">Turn your products into cinema.</div>
-    <div class="badge">v0.1 — FOUNDATION UNDER CONSTRUCTION</div>
+    <div class="badge">v0.2 — BRIDGE UNDER TEST</div>
+
+    <div class="status" id="status">
+      <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
+      <div>📡 Supabase library … <span id="s-lib">checking…</span></div>
+      <div>🔌 Database ………… <span id="s-db">waiting…</span></div>
+    </div>
+
     <div class="foot">Made in Ethiopia · AI videos for sellers</div>
   </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  var sConfig = document.getElementById('s-config');
+  var sLib    = document.getElementById('s-lib');
+  var sDb     = document.getElementById('s-db');
+
+  if (window.LION && window.LION.SUPABASE_URL && window.LION.SUPABASE_ANON_KEY) {
+    sConfig.textContent = 'OK ✅'; sConfig.className = 'ok';
+  } else {
+    sConfig.textContent = 'MISSING ❌'; sConfig.className = 'bad';
+    sLib.textContent = 'skipped'; sDb.textContent = 'skipped'; return;
+  }
+
+  if (window.supabase && window.supabase.createClient) {
+    sLib.textContent = 'OK ✅'; sLib.className = 'ok';
+  } else {
+    sLib.textContent = 'FAILED ❌'; sLib.className = 'bad';
+    sDb.textContent = 'skipped'; return;
+  }
+
+  fetch(window.LION.SUPABASE_URL + '/rest/v1/', {
+    headers: { apikey: window.LION.SUPABASE_ANON_KEY }
+  })
+  .then(function(r){
+    if (r.ok) { sDb.textContent = 'CONNECTED ✅'; sDb.className = 'ok'; }
+    else { sDb.textContent = 'ERROR ' + r.status + ' ❌'; sDb.className = 'bad'; }
+  })
+  .catch(function(){
+    sDb.textContent = 'NO CONNECTION ❌'; sDb.className = 'bad';
+  });
+})();
+</script>
 </body>
 </html>
