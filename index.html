@@ -14,10 +14,7 @@
   }
   .card { max-width:420px; width:100%; }
   .lion { font-size:72px; }
-  h1 {
-    font-size:42px; letter-spacing:4px; margin:12px 0 8px;
-    color:#f2b705; text-transform:uppercase;
-  }
+  h1 { font-size:42px; letter-spacing:4px; margin:12px 0 8px; color:#f2b705; text-transform:uppercase; }
   .tag { font-size:17px; color:#cfc7b8; margin-bottom:20px; }
   .badge {
     display:inline-block; padding:8px 16px; border:1px solid #f2b705;
@@ -38,7 +35,7 @@
     <div class="lion">🦁</div>
     <h1>Lion Studio</h1>
     <div class="tag">Turn your products into cinema.</div>
-    <div class="badge">v0.2 — BRIDGE UNDER TEST</div>
+    <div class="badge">v0.3 — BRIDGE UNDER TEST</div>
 
     <div class="status" id="status">
       <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
@@ -71,15 +68,32 @@
     sDb.textContent = 'skipped'; return;
   }
 
-  fetch(window.LION.SUPABASE_URL + '/rest/v1/', {
-    headers: { apikey: window.LION.SUPABASE_ANON_KEY }
-  })
-  .then(function(r){
-    if (r.ok) { sDb.textContent = 'CONNECTED ✅'; sDb.className = 'ok'; }
-    else { sDb.textContent = 'ERROR ' + r.status + ' ❌'; sDb.className = 'bad'; }
-  })
-  .catch(function(){
-    sDb.textContent = 'NO CONNECTION ❌'; sDb.className = 'bad';
+  var client;
+  try {
+    client = window.supabase.createClient(
+      window.LION.SUPABASE_URL,
+      window.LION.SUPABASE_ANON_KEY
+    );
+  } catch(e) {
+    sDb.textContent = 'BAD URL ❌ ' + e.message; sDb.className = 'bad'; return;
+  }
+
+  client.from('studio_jobs').select('*').limit(1)
+  .then(function(res){
+    var msg = (res.error && res.error.message) || '';
+    var code = (res.error && res.error.code) || '';
+    if (!res.error) {
+      sDb.textContent = 'CONNECTED ✅'; sDb.className = 'ok';
+    } else if (code === '42P01' || code === 'PGRST205' ||
+               /does not exist|Could not find the table/i.test(msg)) {
+      sDb.textContent = 'REACHED ✅ (tables arrive in Block 3)';
+      sDb.className = 'ok';
+    } else if (res.status === 401 || code === 'PGRST301' ||
+               /invalid api key|jwt|401/i.test(msg)) {
+      sDb.textContent = 'KEY REJECTED ❌ ' + msg; sDb.className = 'bad';
+    } else {
+      sDb.textContent = 'NOTE: ' + msg; sDb.className = 'bad';
+    }
   });
 })();
 </script>
