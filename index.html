@@ -56,6 +56,9 @@
     border-radius:999px; padding:8px 12px; font-size:12px; font-family:inherit;
   }
   .pchip.sel { border-color:#f2b705; color:#f2b705; background:rgba(242,183,5,.08); }
+  #st-thumb { margin-bottom:10px; text-align:center; }
+  #st-thumb img { max-width:100%; max-height:150px; border-radius:10px; border:1px solid #2a2a30; }
+  .linkbtn { background:none; border:none; color:#f87171; font-size:11px; font-family:inherit; padding:6px; }
   .job {
     background:#0e0e10; border:1px solid #2a2a30; border-radius:12px;
     padding:12px; margin-bottom:12px;
@@ -88,9 +91,54 @@
   .mockbadge {
     position:absolute; top:8px; right:8px; font-size:9px; letter-spacing:1px;
     background:rgba(0,0,0,.55); color:#f2b705; border:1px solid #f2b705;
-    padding:2px 6px; border-radius:999px;
+    padding:2px 6px; border-radius:999px; z-index:3;
   }
   .jmeta { font-size:11px; color:#6f6a5e; margin-top:8px; }
+  /* ---- Director's Cut: the theater ---- */
+  .theater {
+    position:relative; border-radius:10px; overflow:hidden;
+    aspect-ratio:4/5; min-height:300px; background:#000;
+  }
+  .theater img { width:100%; height:100%; object-fit:cover; display:block; }
+  .theater.playing img { animation:kenburns 10.5s ease-in-out forwards; }
+  @keyframes kenburns {
+    0%   { transform:scale(1) translate(0,0); }
+    50%  { transform:scale(1.14) translate(-2%,-2%); }
+    100% { transform:scale(1.06) translate(2%,1%); }
+  }
+  .vignette {
+    position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:1;
+    background:linear-gradient(180deg, rgba(0,0,0,.30) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,.60) 100%);
+  }
+  .tscene {
+    position:absolute; left:12px; right:12px; bottom:52px; z-index:2;
+    font-size:17px; color:#ffe9a8; text-shadow:0 1px 8px rgba(0,0,0,.9);
+    opacity:0;
+  }
+  .theater.playing .tscene { animation:tshow 10.5s forwards; }
+  .theater.playing .t2 { animation-delay:3.4s; }
+  .theater.playing .t3 { animation-delay:6.8s; }
+  @keyframes tshow {
+    0% { opacity:0; transform:translateY(8px); }
+    5% { opacity:1; transform:none; }
+    28% { opacity:1; }
+    33% { opacity:0; }
+    100% { opacity:0; }
+  }
+  .tendcard {
+    position:absolute; top:0; left:0; right:0; bottom:0; z-index:2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:rgba(14,14,16,.85); color:#f2b705; font-size:20px; font-weight:700;
+    opacity:0;
+  }
+  .tendcard small { font-size:10px; letter-spacing:3px; color:#6f6a5e; }
+  .theater.playing .tendcard { animation:endin 10.5s forwards; }
+  @keyframes endin { 0%,86% { opacity:0; } 96%,100% { opacity:1; } }
+  .playbtn {
+    position:absolute; top:0; left:0; right:0; bottom:0; z-index:4;
+    width:100%; background:rgba(0,0,0,.30); border:none; color:#fff;
+    font-size:15px; font-weight:700; font-family:inherit; text-shadow:0 1px 6px #000;
+  }
   .bigbal { text-align:center; padding:8px 0 12px; }
   .bigbal span { font-size:46px; color:#f2b705; font-weight:700; }
   .bigbal small { display:block; color:#6f6a5e; font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
@@ -156,8 +204,8 @@
 
     <div class="card">
       <h2>Coming next</h2>
-      <p>🔒 <b>Block 8:</b> the great locking — your data, your eyes only<br>
-         🧠 <b>Block 9:</b> the real AI brain (paid renders)</p>
+      <p>🔒 <b>Block 9:</b> the great locking — your data, your eyes only<br>
+         🧠 <b>Block 10:</b> the real AI brain (paid renders)</p>
     </div>
   </section>
 
