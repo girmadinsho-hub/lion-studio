@@ -35,12 +35,13 @@
     <div class="lion">🦁</div>
     <h1>Lion Studio</h1>
     <div class="tag">Turn your products into cinema.</div>
-    <div class="badge">v0.3 — BRIDGE UNDER TEST</div>
+    <div class="badge">v0.4 — VAULT UNDER TEST</div>
 
     <div class="status" id="status">
       <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
       <div>📡 Supabase library … <span id="s-lib">checking…</span></div>
-      <div>🔌 Database ………… <span id="s-db">waiting…</span></div>
+      <div>🗄️ Tables …………… <span id="s-db">waiting…</span></div>
+      <div>✍️ Write test ……… <span id="s-write">waiting…</span></div>
     </div>
 
     <div class="foot">Made in Ethiopia · AI videos for sellers</div>
@@ -53,19 +54,20 @@
   var sConfig = document.getElementById('s-config');
   var sLib    = document.getElementById('s-lib');
   var sDb     = document.getElementById('s-db');
+  var sWrite  = document.getElementById('s-write');
 
   if (window.LION && window.LION.SUPABASE_URL && window.LION.SUPABASE_ANON_KEY) {
     sConfig.textContent = 'OK ✅'; sConfig.className = 'ok';
   } else {
     sConfig.textContent = 'MISSING ❌'; sConfig.className = 'bad';
-    sLib.textContent = 'skipped'; sDb.textContent = 'skipped'; return;
+    sLib.textContent = sDb.textContent = sWrite.textContent = 'skipped'; return;
   }
 
   if (window.supabase && window.supabase.createClient) {
     sLib.textContent = 'OK ✅'; sLib.className = 'ok';
   } else {
     sLib.textContent = 'FAILED ❌'; sLib.className = 'bad';
-    sDb.textContent = 'skipped'; return;
+    sDb.textContent = sWrite.textContent = 'skipped'; return;
   }
 
   var client;
@@ -78,23 +80,34 @@
     sDb.textContent = 'BAD URL ❌ ' + e.message; sDb.className = 'bad'; return;
   }
 
-  client.from('studio_jobs').select('*').limit(1)
-  .then(function(res){
-    var msg = (res.error && res.error.message) || '';
-    var code = (res.error && res.error.code) || '';
-    if (!res.error) {
-      sDb.textContent = 'CONNECTED ✅'; sDb.className = 'ok';
-    } else if (code === '42P01' || code === 'PGRST205' ||
-               /does not exist|Could not find the table/i.test(msg)) {
-      sDb.textContent = 'REACHED ✅ (tables arrive in Block 3)';
-      sDb.className = 'ok';
-    } else if (res.status === 401 || code === 'PGRST301' ||
-               /invalid api key|jwt|401/i.test(msg)) {
-      sDb.textContent = 'KEY REJECTED ❌ ' + msg; sDb.className = 'bad';
-    } else {
-      sDb.textContent = 'NOTE: ' + msg; sDb.className = 'bad';
+  (async function(){
+    var r1 = await client.from('studio_jobs').select('id').limit(1);
+    if (r1.error) {
+      var m = r1.error.message || '', c = r1.error.code || '';
+      if (c === '42P01' || c === 'PGRST205' || /does not exist|Could not find the table/i.test(m)) {
+        sDb.textContent = 'TABLES MISSING ❌ (run the Block 3 SQL)';
+      } else if (r1.status === 401 || c === 'PGRST301' || /invalid api key|jwt|401/i.test(m)) {
+        sDb.textContent = 'KEY REJECTED ❌ ' + m;
+      } else {
+        sDb.textContent = 'ERROR ❌ ' + m;
+      }
+      sDb.className = 'bad'; sWrite.textContent = 'skipped'; return;
     }
-  });
+    sDb.textContent = 'TABLES FOUND ✅'; sDb.className = 'ok';
+
+    var r2 = await client.from('studio_jobs')
+      .insert({ kind:'image', preset:'meter-test', prompt:'meter write test', status:'done', is_mock:true })
+      .select('id').single();
+    if (r2.error) {
+      sWrite.textContent = 'WRITE FAILED ❌ ' + (r2.error.message || '');
+      sWrite.className = 'bad'; return;
+    }
+    sWrite.textContent = 'WRITE ✅ (cleaning…)';
+
+    await client.from('studio_jobs').delete().eq('id', r2.data.id);
+    sWrite.textContent = 'WRITE+CLEAN ✅';
+    sWrite.className = 'ok';
+  })();
 })();
 </script>
 </body>
