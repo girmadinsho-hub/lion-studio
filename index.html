@@ -2,113 +2,115 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e10">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>Lion Studio</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background:#0e0e10; color:#f5f0e6;
+    background:#0e0e10; color:#f5f0e6; min-height:100vh;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    text-align:center; padding:24px;
+    display:flex; flex-direction:column;
   }
-  .card { max-width:420px; width:100%; }
-  .lion { font-size:72px; }
-  h1 { font-size:42px; letter-spacing:4px; margin:12px 0 8px; color:#f2b705; text-transform:uppercase; }
-  .tag { font-size:17px; color:#cfc7b8; margin-bottom:20px; }
-  .badge {
-    display:inline-block; padding:8px 16px; border:1px solid #f2b705;
-    border-radius:999px; color:#f2b705; font-size:13px; letter-spacing:1px;
+  header {
+    position:sticky; top:0; z-index:10; background:rgba(14,14,16,.95);
+    border-bottom:1px solid #232328; padding:14px 16px;
+    display:flex; align-items:center; gap:10px;
   }
-  .status {
-    margin-top:24px; background:#17171b; border:1px solid #2a2a30;
-    border-radius:12px; padding:14px; text-align:left; font-size:13px;
+  header .logo { font-size:26px; }
+  header h1 { font-size:17px; letter-spacing:2px; color:#f2b705; flex:1; text-transform:uppercase; }
+  .chip {
+    font-size:11px; color:#cfc7b8; border:1px solid #2a2a30;
+    padding:3px 8px; border-radius:999px;
   }
-  .status div { padding:4px 0; color:#cfc7b8; }
+  #net-dot { width:9px; height:9px; border-radius:50%; background:#4ade80; }
+  main { flex:1; padding:20px 16px 90px; max-width:480px; width:100%; margin:0 auto; }
+  .card {
+    background:#17171b; border:1px solid #232328; border-radius:14px;
+    padding:16px; margin-bottom:16px;
+  }
+  .card h2 { font-size:15px; color:#f2b705; margin-bottom:10px; }
+  .card p { font-size:13px; color:#cfc7b8; line-height:1.6; }
+  .status div { padding:4px 0; font-size:13px; color:#cfc7b8; text-align:left; }
   .ok  { color:#4ade80; }
   .bad { color:#f87171; }
-  .foot { margin-top:28px; font-size:12px; color:#6f6a5e; }
+  .locked { text-align:center; padding:30px 16px; }
+  .locked .big { font-size:44px; margin-bottom:10px; }
+  .locked p { font-size:13px; color:#cfc7b8; line-height:1.6; }
+  nav {
+    position:fixed; bottom:0; left:0; right:0; z-index:10;
+    background:#121215; border-top:1px solid #232328;
+    display:flex; padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button {
+    flex:1; background:none; border:none; color:#6f6a5e;
+    font-size:11px; padding:10px 0 12px; font-family:inherit;
+  }
+  nav button .ic { display:block; font-size:20px; margin-bottom:3px; }
+  nav button.active { color:#f2b705; }
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="lion">🦁</div>
-    <h1>Lion Studio</h1>
-    <div class="tag">Turn your products into cinema.</div>
-    <div class="badge">v0.4 — VAULT UNDER TEST</div>
 
-    <div class="status" id="status">
-      <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
-      <div>📡 Supabase library … <span id="s-lib">checking…</span></div>
-      <div>🗄️ Tables …………… <span id="s-db">waiting…</span></div>
-      <div>✍️ Write test ……… <span id="s-write">waiting…</span></div>
+<header>
+  <span class="logo">🦁</span>
+  <h1>Lion Studio</h1>
+  <span class="chip" id="ver-chip">v0</span>
+  <span id="net-dot" title="internet"></span>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="tab-home">
+    <div class="card">
+      <h2>Vitals</h2>
+      <div class="status">
+        <div>⚙️ config.js ……… <span id="s-config">checking…</span></div>
+        <div>📡 Supabase library … <span id="s-lib">checking…</span></div>
+        <div>🗄️ Tables …………… <span id="s-db">waiting…</span></div>
+        <div>✍️ Write test ……… <span id="s-write">waiting…</span></div>
+        <div>📦 Offline pack …… <span id="sw-state">registering…</span></div>
+      </div>
     </div>
+    <div class="card">
+      <h2>Coming next</h2>
+      <p>🎬 <b>Block 5:</b> creator sign-in<br>
+         🎥 <b>Block 6:</b> Studio opens (mock mode)<br>
+         🪙 <b>Block 7:</b> credits vault</p>
+    </div>
+  </section>
 
-    <div class="foot">Made in Ethiopia · AI videos for sellers</div>
-  </div>
+  <!-- STUDIO -->
+  <section id="tab-studio" style="display:none">
+    <div class="card locked">
+      <div class="big">🎬</div>
+      <h2>Studio — opening soon</h2>
+      <p>Photo in, cinema out.<br>
+      This door opens in <b>Block 6</b>, after sign-in arrives in <b>Block 5</b>.</p>
+    </div>
+  </section>
+
+  <!-- VAULT -->
+  <section id="tab-vault" style="display:none">
+    <div class="card locked">
+      <div class="big">🪙</div>
+      <h2>Credits vault — opening soon</h2>
+      <p>Your balance, movements and history.<br>
+      Opens in <b>Block 7</b>.</p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button id="nav-home" class="active" onclick="lionGo('home')"><span class="ic">🏠</span>Home</button>
+  <button id="nav-studio" onclick="lionGo('studio')"><span class="ic">🎬</span>Studio</button>
+  <button id="nav-vault" onclick="lionGo('vault')"><span class="ic">🪙</span>Vault</button>
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script>
-(function(){
-  var sConfig = document.getElementById('s-config');
-  var sLib    = document.getElementById('s-lib');
-  var sDb     = document.getElementById('s-db');
-  var sWrite  = document.getElementById('s-write');
-
-  if (window.LION && window.LION.SUPABASE_URL && window.LION.SUPABASE_ANON_KEY) {
-    sConfig.textContent = 'OK ✅'; sConfig.className = 'ok';
-  } else {
-    sConfig.textContent = 'MISSING ❌'; sConfig.className = 'bad';
-    sLib.textContent = sDb.textContent = sWrite.textContent = 'skipped'; return;
-  }
-
-  if (window.supabase && window.supabase.createClient) {
-    sLib.textContent = 'OK ✅'; sLib.className = 'ok';
-  } else {
-    sLib.textContent = 'FAILED ❌'; sLib.className = 'bad';
-    sDb.textContent = sWrite.textContent = 'skipped'; return;
-  }
-
-  var client;
-  try {
-    client = window.supabase.createClient(
-      window.LION.SUPABASE_URL,
-      window.LION.SUPABASE_ANON_KEY
-    );
-  } catch(e) {
-    sDb.textContent = 'BAD URL ❌ ' + e.message; sDb.className = 'bad'; return;
-  }
-
-  (async function(){
-    var r1 = await client.from('studio_jobs').select('id').limit(1);
-    if (r1.error) {
-      var m = r1.error.message || '', c = r1.error.code || '';
-      if (c === '42P01' || c === 'PGRST205' || /does not exist|Could not find the table/i.test(m)) {
-        sDb.textContent = 'TABLES MISSING ❌ (run the Block 3 SQL)';
-      } else if (r1.status === 401 || c === 'PGRST301' || /invalid api key|jwt|401/i.test(m)) {
-        sDb.textContent = 'KEY REJECTED ❌ ' + m;
-      } else {
-        sDb.textContent = 'ERROR ❌ ' + m;
-      }
-      sDb.className = 'bad'; sWrite.textContent = 'skipped'; return;
-    }
-    sDb.textContent = 'TABLES FOUND ✅'; sDb.className = 'ok';
-
-    var r2 = await client.from('studio_jobs')
-      .insert({ kind:'image', preset:'meter-test', prompt:'meter write test', status:'done', is_mock:true })
-      .select('id').single();
-    if (r2.error) {
-      sWrite.textContent = 'WRITE FAILED ❌ ' + (r2.error.message || '');
-      sWrite.className = 'bad'; return;
-    }
-    sWrite.textContent = 'WRITE ✅ (cleaning…)';
-
-    await client.from('studio_jobs').delete().eq('id', r2.data.id);
-    sWrite.textContent = 'WRITE+CLEAN ✅';
-    sWrite.className = 'ok';
-  })();
-})();
-</script>
+<script src="app.js"></script>
 </body>
 </html>
