@@ -101,17 +101,21 @@
     position:relative; border-radius:10px; overflow:hidden;
     aspect-ratio:4/5; min-height:300px; background:#000;
   }
-    .theater.ar916 { aspect-ratio:9/16; }
+  .theater.ar916 { aspect-ratio:9/16; }
   .theater.ar45  { aspect-ratio:4/5; }
   .theater.ar11  { aspect-ratio:1/1; min-height:220px; }
   .theater.ar169 { aspect-ratio:16/9; min-height:200px; }
   .theater img { width:100%; height:100%; object-fit:cover; display:block; }
-  .theater.playing img { animation:kenburns 10.5s ease-in-out forwards; }
+  .theater.playing.c-zoom img { animation:kenburns 10.5s ease-in-out forwards; }
+  .theater.playing.c-panl img { animation:panleft 10.5s ease-in-out forwards; }
+  .theater.playing.c-panr img { animation:panright 10.5s ease-in-out forwards; }
   @keyframes kenburns {
     0%   { transform:scale(1) translate(0,0); }
     50%  { transform:scale(1.14) translate(-2%,-2%); }
     100% { transform:scale(1.06) translate(2%,1%); }
   }
+  @keyframes panleft  { 0% { transform:scale(1.18) translateX(6%); } 100% { transform:scale(1.18) translateX(-6%); } }
+  @keyframes panright { 0% { transform:scale(1.18) translateX(-6%); } 100% { transform:scale(1.18) translateX(6%); } }
   .vignette {
     position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:1;
     background:linear-gradient(180deg, rgba(0,0,0,.30) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,.60) 100%);
@@ -148,9 +152,14 @@
   .xbtns { display:flex; gap:8px; margin-top:10px; }
   .xbtn {
     flex:1; background:none; border:1px solid #f2b705; color:#f2b705;
-    border-radius:10px; padding:10px 6px; font-size:12px; font-weight:700; font-family:inherit;
+    border-radius:10px; padding:10px 4px; font-size:12px; font-weight:700; font-family:inherit;
   }
+  .xbtn.del { border-color:#f87171; color:#f87171; flex:0 0 52px; }
   .xbtn:disabled { opacity:.55; }
+  .morebtn {
+    width:100%; background:none; border:1px dashed #2a2a30; color:#cfc7b8;
+    border-radius:10px; padding:10px; font-size:12px; font-family:inherit; margin-top:4px;
+  }
   .bigbal { text-align:center; padding:8px 0 12px; }
   .bigbal span { font-size:46px; color:#f2b705; font-weight:700; }
   .bigbal small { display:block; color:#6f6a5e; font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
@@ -216,8 +225,8 @@
 
     <div class="card">
       <h2>Coming next</h2>
-      <p>🧠 <b>Block 12:</b> the real AI brain — opens when the wallet is funded<br>
-         🖼️ <b>Block 13:</b> renders gallery &amp; share polish</p>
+      <p>🧠 <b>Block 13:</b> wire the sleeping AI brain (free to build)<br>
+         🏁 <b>Then:</b> testing week → the v1.0 stamp</p>
     </div>
   </section>
 
