@@ -7,5 +7,6 @@
 window.LION = {
   SUPABASE_URL: "https://jaivxsqvnumhejfhirrr.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_4iDuh2jHkO9dI5IKEswREQ_5vVoPNqx",
-  APP_VERSION: "0.13"
+  APP_VERSION: "0.14",
+  AI: { LIVE: false, PRICE: 10 }
 };
