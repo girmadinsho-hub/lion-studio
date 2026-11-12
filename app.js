@@ -1,5 +1,7 @@
 /* ==========================================
    LION STUDIO — app.js (shell engine)
+   Block 9: fortress edition.
+   The self-test now knows about locks.
    ========================================== */
 (function(){
 
@@ -76,8 +78,19 @@
     }
     sDb.textContent = 'TABLES FOUND ✅'; sDb.className = 'ok';
 
+    /* Who is at the door? Under the guards, only an
+       owner may write — so the write test needs you. */
+    var s = await client.auth.getSession();
+    var u = (s.data && s.data.session) ? s.data.session.user : null;
+    if (!u) {
+      sWrite.textContent = 'locked 🔒 sign in to test';
+      sWrite.className = 'warn';
+      return;
+    }
+
     var r2 = await client.from('studio_jobs')
-      .insert({ kind:'image', preset:'boot-test', prompt:'app shell round trip', status:'done', is_mock:true })
+      .insert({ creator_id: u.id, kind:'image', preset:'boot-test',
+                prompt:'app shell round trip', status:'done', is_mock:true })
       .select('id').single();
     if (r2.error) {
       sWrite.textContent = 'WRITE FAILED ❌'; sWrite.className = 'bad'; return;
