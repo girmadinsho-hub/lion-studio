@@ -1,7 +1,6 @@
 /* ==========================================
    LION STUDIO — app.js (shell engine)
-   Block 9: fortress edition.
-   The self-test now knows about locks.
+   Block 13: fortress + brain probe.
    ========================================== */
 (function(){
 
@@ -78,8 +77,6 @@
     }
     sDb.textContent = 'TABLES FOUND ✅'; sDb.className = 'ok';
 
-    /* Who is at the door? Under the guards, only an
-       owner may write — so the write test needs you. */
     var s = await client.auth.getSession();
     var u = (s.data && s.data.session) ? s.data.session.user : null;
     if (!u) {
@@ -98,5 +95,23 @@
     await client.from('studio_jobs').delete().eq('id', r2.data.id);
     sWrite.textContent = 'WRITE+CLEAN ✅'; sWrite.className = 'ok';
   })();
+
+  // Brain probe — is the server room answering?
+  var sBrain = document.getElementById('s-brain');
+  if (sBrain) {
+    (async function(){
+      try {
+        var r = await client.functions.invoke('lion-brain', { body: { action: 'ping' } });
+        if (r.error) throw new Error('no answer');
+        if (r.data && r.data.awake) {
+          sBrain.textContent = 'AWAKE 🧠'; sBrain.className = 'ok';
+        } else {
+          sBrain.textContent = 'SLEEPING 💤'; sBrain.className = 'warn';
+        }
+      } catch(e) {
+        sBrain.textContent = 'NOT DEPLOYED ❌'; sBrain.className = 'bad';
+      }
+    })();
+  }
 
 })();
