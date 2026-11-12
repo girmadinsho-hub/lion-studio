@@ -75,7 +75,8 @@
       '</div>' +
       '<div class="card">' +
         '<h2>🎁 Daily bonus</h2>' +
-        '<p>Come back once a day and claim <b>+5 credits</b>. They will pay for real renders when the AI brain arrives.</p>' +
+                '<p>Come back once a day and claim <b>+5 credits</b>.</p>' +
+        '<p style="font-size:11px;color:#6f6a5e">🧠 Real AI render: <b>10 credits</b> each · 🎭 Mock render: always free</p>' +
         (eligible
           ? '<button class="btn" id="v-bonus">🎁 Claim +5 credits</button>'
           : '<button class="btn ghost" disabled>✅ Claimed — come back tomorrow</button>') +
