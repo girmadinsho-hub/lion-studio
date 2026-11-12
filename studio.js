@@ -1,6 +1,6 @@
 /* ==========================================
-   LION STUDIO — studio.js (Director's Toolkit)
-   Block 11: your own words + TikTok shape.
+   LION STUDIO — studio.js (Polish Edition)
+   Block 12: camera moves, delete, deep gallery.
    ========================================== */
 (function(){
   var client = window.lionClient;
@@ -21,20 +21,27 @@
     weekend: { emoji:'🎉', label:'Weekend Special',
                scenes:['🎉 The weekend special is live!','📸 Treat yourself to {P}.','🛒 Order before Sunday night!'] }
   };
-    var ASPECT = {
+  var ASPECT = {
     '916': { cls:'ar916', W:720, H:1280, label:'TikTok' },
     '45':  { cls:'ar45',  W:720, H:900,  label:'Feed' },
     '11':  { cls:'ar11',  W:800, H:800,  label:'Square' },
     '169': { cls:'ar169', W:1280, H:720, label:'Wide' }
   };
+  var CAMS = {
+    zoom: { label:'🔍 Zoom In' },
+    panl: { label:'⬅️ Pan Left' },
+    panr: { label:'➡️ Pan Right' }
+  };
   var pick = 'hot';
   var shape = '916';
+  var cam = 'zoom';
   var photoData = null;
   var jobsById = {};
   var shop = { name: '', contact: '' };
   var pendingShare = {};
   var recording = false;
   var lastFill = '';
+  var renderDepth = 10;
 
   function esc(s){
     return String(s || '').replace(/[&<>"']/g, function(c){
@@ -99,11 +106,17 @@
              '" data-k="' + k + '">' + PRESETS[k].emoji + ' ' + PRESETS[k].label + '</button>';
     }).join('');
 
-    var shapes = Object.keys(ASPECT).map(function(k){      var lbl = k === '916' ? '📱 TikTok'
+    var shapes = Object.keys(ASPECT).map(function(k){
+      var lbl = k === '916' ? '📱 TikTok'
               : (k === '45'  ? '🖼️ Feed 4:5'
               : (k === '169' ? '🖥️ Wide 16:9' : '⬜ Square'));
       return '<button class="pchip' + (k === shape ? ' sel' : '') +
              '" data-a="' + k + '">' + lbl + '</button>';
+    }).join('');
+
+    var cams = Object.keys(CAMS).map(function(k){
+      return '<button class="pchip' + (k === cam ? ' sel' : '') +
+             '" data-c="' + k + '">' + CAMS[k].label + '</button>';
     }).join('');
 
     body.innerHTML =
@@ -122,6 +135,8 @@
         '<textarea id="st-desc" maxlength="200" placeholder="one or two lines about it (optional)"></textarea>' +
         '<p class="hint">video shape:</p>' +
         '<div class="chips" id="st-aspect">' + shapes + '</div>' +
+        '<p class="hint">camera move:</p>' +
+        '<div class="chips" id="st-cam">' + cams + '</div>' +
         '<p class="hint">your three lines — edit freely (they follow the product name until you change them):</p>' +
         '<input id="st-l1" maxlength="70" placeholder="line 1 — the hook">' +
         '<input id="st-l2" maxlength="70" placeholder="line 2 — the close-up">' +
@@ -156,6 +171,15 @@
       if (!b) return;
       shape = b.getAttribute('data-a');
       var all = document.querySelectorAll('#st-aspect .pchip');
+      for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
+      b.classList.add('sel');
+    });
+
+    document.getElementById('st-cam').addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.pchip') : null;
+      if (!b) return;
+      cam = b.getAttribute('data-c');
+      var all = document.querySelectorAll('#st-cam .pchip');
       for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
       b.classList.add('sel');
     });
@@ -266,7 +290,8 @@
       credits_cost: 0,
       is_mock: true,
       scenes_json: JSON.stringify(lines),
-      aspect: shape
+      aspect: shape,
+      camera: cam
     };
     if (photoData) row.photo_data = photoData;
 
@@ -341,18 +366,21 @@
     var stamp = when(j.created_at);
     var scenes = jobScenes(j);
     var ar = ASPECT[j.aspect] || ASPECT['45'];
+    var camCls = 'c-' + (CAMS[j.camera] ? j.camera : 'zoom');
+    var camLbl = CAMS[j.camera] ? CAMS[j.camera].label : '🔍 Zoom In';
 
     var head = '<div class="top"><b>' + p.emoji + ' ' + esc(prod) + '</b>' +
       '<span class="jstatus ' + (j.status === 'done' ? 'done">DONE ✅' : 'pend">RENDERING') + '</span></div>';
 
     var xbtns = '<div class="xbtns">' +
-      '<button class="xbtn" data-act="save" data-id="' + j.id + '">⬇️ Save video</button>' +
+      '<button class="xbtn" data-act="save" data-id="' + j.id + '">⬇️ Save</button>' +
       '<button class="xbtn" data-act="share" data-id="' + j.id + '">📤 Share</button>' +
+      '<button class="xbtn del" data-act="del" data-id="' + j.id + '">🗑️</button>' +
     '</div>';
 
     if (j.status === 'done' && j.photo_data) {
       return '<div class="job">' + head +
-        '<div class="theater ' + ar.cls + '" id="th-' + j.id + '">' +
+        '<div class="theater ' + ar.cls + ' ' + camCls + '" id="th-' + j.id + '">' +
           '<img src="' + j.photo_data + '" alt="">' +
           '<div class="vignette"></div>' +
           '<div class="tscene t1">' + esc(scenes[0]) + '</div>' +
@@ -362,7 +390,7 @@
           '<button class="playbtn" data-id="' + j.id + '">▶ Play</button>' +
           '<span class="mockbadge">MOCK</span>' +
         '</div>' +
-        '<div class="jmeta">' + esc(p.label) + ' · ' + stamp + ' · ' + ar.label + ' · cost 0 credits · 🔊 voice</div>' +
+        '<div class="jmeta">' + esc(p.label) + ' · ' + stamp + ' · ' + ar.label + ' · ' + camLbl + ' · 🔊</div>' +
         xbtns +
       '</div>';
     }
@@ -415,7 +443,7 @@
   }
 
   function setBtns(id, text, disabled){
-    ['xs-', 'xh-'].forEach(function(p){
+    ['xs-', 'xh-', 'xd-'].forEach(function(p){
       var b = document.getElementById(p + id);
       if (b) { b.disabled = !!disabled; if (text) b.textContent = text; }
     });
@@ -436,6 +464,7 @@
     var prod = (j.prompt || '').split(' — ')[0] || 'your product';
     var scenes = jobScenes(j);
     var ar = ASPECT[j.aspect] || ASPECT['45'];
+    var camMode = CAMS[j.camera] ? j.camera : 'zoom';
     var W = ar.W, H = ar.H;
 
     var img = null;
@@ -473,12 +502,21 @@
     function draw(t){
       if (img) {
         var u = ease(Math.min(1, t / DUR));
-        var z = 1 + 0.14 * u;
-        var s = Math.max(W / img.width, H / img.height) * z;
-        var dw = img.width * s, dh = img.height * s;
-        var dx = (W - dw)/2 - 0.02 * W * u;
-        var dy = (H - dh)/2 - 0.02 * H * u;
-        ctx.drawImage(img, dx, dy, dw, dh);
+
+        if (camMode === 'panl' || camMode === 'panr') {
+          var z2 = 1.18;
+          var s2 = Math.max(W / img.width, H / img.height) * z2;
+          var dw2 = img.width * s2, dh2 = img.height * s2;
+          var swing = 0.07 * W * (camMode === 'panl' ? (1 - 2*u) : (2*u - 1));
+          ctx.drawImage(img, (W - dw2)/2 + swing, (H - dh2)/2, dw2, dh2);
+        } else {
+          var z = 1 + 0.14 * u;
+          var s = Math.max(W / img.width, H / img.height) * z;
+          var dw = img.width * s, dh = img.height * s;
+          var dx = (W - dw)/2 - 0.02 * W * u;
+          var dy = (H - dh)/2 - 0.02 * H * u;
+          ctx.drawImage(img, dx, dy, dw, dh);
+        }
       } else {
         var g = ctx.createLinearGradient(0, H * (t/DUR), W, H * (1 - t/DUR));
         g.addColorStop(0, '#1b1400'); g.addColorStop(.5, '#3a2b00'); g.addColorStop(1, '#1b1400');
@@ -567,8 +605,9 @@
 
     if (blob.size < 5000) {
       setBtns(id, '', false);
-      setBtns(id, '⬇️ Save video', false);
+      document.getElementById('xs-' + id).textContent = '⬇️ Save';
       document.getElementById('xh-' + id).textContent = '📤 Share';
+      document.getElementById('xd-' + id).textContent = '🗑️';
       if (msg) msg.textContent = '❌ Recording came out empty — tell the Captain.';
       return;
     }
@@ -576,8 +615,10 @@
     pendingShare[id] = { blob: blob, fname: fname, prod: prod, tagline: scenes[2] };
     var bS = document.getElementById('xs-' + id);
     var bH = document.getElementById('xh-' + id);
-    if (bS) { bS.disabled = false; bS.textContent = '⬇️ Save video'; }
+    if (bS) { bS.disabled = false; bS.textContent = '⬇️ Save'; }
     if (bH) { bH.disabled = false; bH.textContent = '📤 Tap to share'; }
+    var bD = document.getElementById('xd-' + id);
+    if (bD) { bD.disabled = false; bD.textContent = '🗑️'; }
   }
 
   async function loadJobs(){
@@ -587,11 +628,11 @@
     if (!u) return;
 
     var r = await client.from('studio_jobs')
-      .select('id, preset, prompt, status, is_mock, created_at, photo_data, scenes_json, aspect')
+      .select('id, preset, prompt, status, is_mock, created_at, photo_data, scenes_json, aspect, camera')
       .eq('creator_id', u.id)
       .eq('kind', 'video')
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(renderDepth);
 
     if (r.error) { box.innerHTML = '<p>❌ ' + esc(r.error.message) + '</p>'; return; }
     var jobs = r.data || [];
@@ -615,9 +656,16 @@
     jobsById = {};
     jobs.forEach(function(j){ jobsById[j.id] = j; });
 
-    box.innerHTML = jobs.map(cardHTML).join('');
+    var html = jobs.map(cardHTML).join('');
+    if (jobs.length === renderDepth) {
+      html += '<button class="morebtn" id="st-more">🎞️ Show older renders</button>';
+    }
+    box.innerHTML = html;
 
     box.onclick = async function(e){
+      var mb = e.target.closest ? e.target.closest('.morebtn') : null;
+      if (mb) { renderDepth += 10; loadJobs(); return; }
+
       var pb = e.target.closest ? e.target.closest('.playbtn') : null;
       if (pb) { play(pb.getAttribute('data-id')); return; }
 
@@ -625,6 +673,20 @@
       if (!xb || xb.disabled) return;
       var act = xb.getAttribute('data-act');
       var id  = xb.getAttribute('data-id');
+      var msg = document.getElementById('st-msg');
+
+      if (act === 'del') {
+        if (!confirm('Delete this render forever?')) return;
+        xb.disabled = true; xb.textContent = '⏳';
+        var dr = await client.from('studio_jobs').delete().eq('id', id);
+        if (dr.error) {
+          xb.disabled = false; xb.textContent = '🗑️';
+          if (msg) msg.textContent = '❌ ' + dr.error.message;
+          return;
+        }
+        loadJobs();
+        return;
+      }
 
       if (act === 'save') {
         makeVideo(id).then(function(){
