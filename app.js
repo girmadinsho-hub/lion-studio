@@ -131,6 +131,8 @@
       } catch (e) {
         sBrain.textContent = 'NOT DEPLOYED ❌'; sBrain.className = 'bad';
       }
-    })();
+        })();
   }
+
+})();
   
