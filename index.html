@@ -59,6 +59,7 @@
     border-radius:999px; padding:8px 12px; font-size:12px; font-family:inherit;
   }
   .pchip.sel { border-color:#f2b705; color:#f2b705; background:rgba(242,183,5,.08); }
+  .pchip.lock { border-style:dashed; opacity:.75; }
   #st-thumb { margin-bottom:10px; text-align:center; }
   #st-thumb img { max-width:100%; max-height:150px; border-radius:10px; border:1px solid #2a2a30; }
   .linkbtn { background:none; border:none; color:#f87171; font-size:11px; font-family:inherit; padding:6px; }
@@ -74,6 +75,7 @@
   }
   .jstatus.pend { color:#f2b705; border-color:#f2b705; animation:pulse 1.2s infinite; }
   .jstatus.done { color:#4ade80; border-color:#4ade80; }
+  .jstatus.fail { color:#f87171; border-color:#f87171; }
   @keyframes pulse { 50% { opacity:.45; } }
   .frame {
     position:relative; border-radius:10px; overflow:hidden; padding:20px 16px; min-height:130px;
@@ -149,6 +151,7 @@
     width:100%; background:rgba(0,0,0,.30); border:none; color:#fff;
     font-size:15px; font-weight:700; font-family:inherit; text-shadow:0 1px 6px #000;
   }
+  .rvideo { width:100%; border-radius:10px; background:#000; display:block; }
   .xbtns { display:flex; gap:8px; margin-top:10px; }
   .xbtn {
     flex:1; background:none; border:1px solid #f2b705; color:#f2b705;
@@ -220,13 +223,14 @@
         <div>🗄️ Tables …………… <span id="s-db">waiting…</span></div>
         <div>✍️ Write test ……… <span id="s-write">waiting…</span></div>
         <div>📦 Offline pack …… <span id="sw-state">registering…</span></div>
+        <div>🧠 AI brain ………… <span id="s-brain">checking…</span></div>
       </div>
     </div>
 
     <div class="card">
       <h2>Coming next</h2>
-      <p>🧠 <b>Block 13:</b> wire the sleeping AI brain (free to build)<br>
-         🏁 <b>Then:</b> testing week → the v1.0 stamp</p>
+      <p>🏁 <b>Block 14:</b> fund the wallet → wake the brain<br>
+         🧪 <b>Then:</b> testing week → the v1.0 stamp</p>
     </div>
   </section>
 
