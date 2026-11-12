@@ -1,7 +1,6 @@
 /* ==========================================
-   LION STUDIO — studio.js (Export Room)
-   Block 10: the phone films your ad into a
-   real video file. Free. No AI. No key.
+   LION STUDIO — studio.js (Director's Toolkit)
+   Block 11: your own words + TikTok shape.
    ========================================== */
 (function(){
   var client = window.lionClient;
@@ -9,21 +8,32 @@
   if (!client || !body) return;
 
   var PRESETS = {
-    hot:    { emoji:'🔥', label:'Hot Deal',
-              scenes:['🔥 {P} — price drop!','📸 {P}, up close and shining.','🛒 Order today — before it is gone!'] },
-    fresh:  { emoji:'✨', label:'New Arrival',
-              scenes:['✨ Something new just landed…','📸 Meet {P}.','🛒 Be the first — order now!'] },
-    bundle: { emoji:'🎁', label:'Bundle Offer',
-              scenes:['🎁 Buy more, save more!','📸 {P} — the full bundle.','🛒 Best value — grab it now!'] },
-    love:   { emoji:'💬', label:'Customer Love',
-              scenes:['💬 "I love this!" — a happy buyer','📸 {P}, the crowd favourite.','🛒 Join them — order yours!'] }
+    hot:     { emoji:'🔥', label:'Hot Deal',
+               scenes:['🔥 {P} — price drop!','📸 {P}, up close and shining.','🛒 Order today — before it is gone!'] },
+    fresh:   { emoji:'✨', label:'New Arrival',
+               scenes:['✨ Something new just landed…','📸 Meet {P}.','🛒 Be the first — order now!'] },
+    bundle:  { emoji:'🎁', label:'Bundle Offer',
+               scenes:['🎁 Buy more, save more!','📸 {P} — the full bundle.','🛒 Best value — grab it now!'] },
+    love:    { emoji:'💬', label:'Customer Love',
+               scenes:['💬 "I love this!" — a happy buyer','📸 {P}, the crowd favourite.','🛒 Join them — order yours!'] },
+    flash:   { emoji:'⚡', label:'Flash Sale',
+               scenes:['⚡ FLASH SALE — today only!','📸 {P} at a crazy price.','🛒 Move fast — offer ends tonight!'] },
+    weekend: { emoji:'🎉', label:'Weekend Special',
+               scenes:['🎉 The weekend special is live!','📸 Treat yourself to {P}.','🛒 Order before Sunday night!'] }
+  };
+  var ASPECT = {
+    '916': { cls:'ar916', W:720, H:1280, label:'TikTok' },
+    '45':  { cls:'ar45',  W:720, H:900,  label:'Feed' },
+    '11':  { cls:'ar11',  W:800, H:800,  label:'Square' }
   };
   var pick = 'hot';
+  var shape = '916';
   var photoData = null;
   var jobsById = {};
   var shop = { name: '', contact: '' };
   var pendingShare = {};
   var recording = false;
+  var lastFill = '';
 
   function esc(s){
     return String(s || '').replace(/[&<>"']/g, function(c){
@@ -41,6 +51,38 @@
     return (s.data && s.data.session) ? s.data.session.user : null;
   }
 
+  function presetLines(key, prod){
+    var p = PRESETS[key] || PRESETS.hot;
+    var name = prod || 'it';
+    return p.scenes.map(function(t){ return t.replace('{P}', name); });
+  }
+
+  function fillLines(){
+    var prod = (document.getElementById('st-name') || {}).value || '';
+    var lines = presetLines(pick, prod.trim());
+    ['st-l1','st-l2','st-l3'].forEach(function(id, i){
+      document.getElementById(id).value = lines[i];
+    });
+    lastFill = lines.join('\u0001');
+  }
+
+  function curFill(){
+    return ['st-l1','st-l2','st-l3'].map(function(id){
+      return ((document.getElementById(id) || {}).value) || '';
+    }).join('\u0001');
+  }
+
+  function jobScenes(j){
+    if (j.scenes_json) {
+      try {
+        var arr = JSON.parse(j.scenes_json);
+        if (arr && arr.length === 3) return arr.map(String);
+      } catch(e){}
+    }
+    var prod = (j.prompt || '').split(' — ')[0] || 'your product';
+    return presetLines(j.preset, prod);
+  }
+
   function renderOut(){
     body.innerHTML =
       '<div class="card locked">' +
@@ -54,6 +96,12 @@
     var chips = Object.keys(PRESETS).map(function(k){
       return '<button class="pchip' + (k === pick ? ' sel' : '') +
              '" data-k="' + k + '">' + PRESETS[k].emoji + ' ' + PRESETS[k].label + '</button>';
+    }).join('');
+
+    var shapes = Object.keys(ASPECT).map(function(k){
+      var lbl = k === '916' ? '📱 TikTok' : (k === '45' ? '🖼️ Feed 4:5' : '⬜ Square');
+      return '<button class="pchip' + (k === shape ? ' sel' : '') +
+             '" data-a="' + k + '">' + lbl + '</button>';
     }).join('');
 
     body.innerHTML =
@@ -70,6 +118,12 @@
         '<div class="chips" id="st-chips">' + chips + '</div>' +
         '<input id="st-name" maxlength="60" placeholder="product name — e.g. leather handbag">' +
         '<textarea id="st-desc" maxlength="200" placeholder="one or two lines about it (optional)"></textarea>' +
+        '<p class="hint">video shape:</p>' +
+        '<div class="chips" id="st-aspect">' + shapes + '</div>' +
+        '<p class="hint">your three lines — edit freely (they follow the product name until you change them):</p>' +
+        '<input id="st-l1" maxlength="70" placeholder="line 1 — the hook">' +
+        '<input id="st-l2" maxlength="70" placeholder="line 2 — the close-up">' +
+        '<input id="st-l3" maxlength="70" placeholder="line 3 — the call to action">' +
         '<input type="file" id="st-photo" accept="image/*" style="display:none">' +
         '<button class="btn ghost" id="st-photo-btn">📸 Add product photo (camera or gallery)</button>' +
         '<div id="st-thumb" style="display:none">' +
@@ -92,6 +146,20 @@
       var all = document.querySelectorAll('#st-chips .pchip');
       for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
       b.classList.add('sel');
+      if (curFill() === lastFill) fillLines();
+    });
+
+    document.getElementById('st-aspect').addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.pchip') : null;
+      if (!b) return;
+      shape = b.getAttribute('data-a');
+      var all = document.querySelectorAll('#st-aspect .pchip');
+      for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
+      b.classList.add('sel');
+    });
+
+    document.getElementById('st-name').addEventListener('input', function(){
+      if (curFill() === lastFill) fillLines();
     });
 
     var fin = document.getElementById('st-photo');
@@ -102,6 +170,7 @@
       document.getElementById('st-thumb').style.display = 'none';
     });
 
+    fillLines();
     document.getElementById('st-go').addEventListener('click', generate);
     document.getElementById('sh-save').addEventListener('click', saveShop);
     loadJobs();
@@ -171,6 +240,11 @@
     var desc = document.getElementById('st-desc').value.trim();
     if (!name) { msg.textContent = '❌ Give your product a name first.'; return; }
 
+    var lines = ['st-l1','st-l2','st-l3'].map(function(id){
+      return document.getElementById(id).value.trim();
+    });
+    if (!lines[0] && !lines[1] && !lines[2]) lines = presetLines(pick, name);
+
     go.disabled = true; go.textContent = '⏳ Working…';
     var u = await me();
     if (!u) {
@@ -188,7 +262,9 @@
       status: 'pending',
       provider: 'mock',
       credits_cost: 0,
-      is_mock: true
+      is_mock: true,
+      scenes_json: JSON.stringify(lines),
+      aspect: shape
     };
     if (photoData) row.photo_data = photoData;
 
@@ -203,14 +279,14 @@
 
     await loadJobs();
     var jobId = r.data.id;
-    var lines = ['Writing the script…','Casting the light…','Rendering scenes…'];
+    var lines2 = ['Writing the script…','Casting the light…','Rendering scenes…'];
     var i = 0;
     var el = document.getElementById('jl-' + jobId);
-    if (el) el.textContent = '🎬 ' + lines[0];
+    if (el) el.textContent = '🎬 ' + lines2[0];
     var tick = setInterval(function(){
-      i = (i + 1) % lines.length;
+      i = (i + 1) % lines2.length;
       var x = document.getElementById('jl-' + jobId);
-      if (x) x.textContent = '🎬 ' + lines[i];
+      if (x) x.textContent = '🎬 ' + lines2[i];
     }, 2200);
 
     setTimeout(async function(){
@@ -239,7 +315,7 @@
     if (!j) return;
     var p = PRESETS[j.preset] || PRESETS.hot;
     var prod = (j.prompt || '').split(' — ')[0] || 'your product';
-    var scenes = p.scenes.map(function(t){ return t.replace('{P}', prod); });
+    var scenes = jobScenes(j);
     var btn = th.querySelector('.playbtn');
 
     if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -261,7 +337,8 @@
     var p = PRESETS[j.preset] || PRESETS.hot;
     var prod = (j.prompt || '').split(' — ')[0] || 'your product';
     var stamp = when(j.created_at);
-    var scenes = p.scenes.map(function(t){ return t.replace('{P}', prod); });
+    var scenes = jobScenes(j);
+    var ar = ASPECT[j.aspect] || ASPECT['45'];
 
     var head = '<div class="top"><b>' + p.emoji + ' ' + esc(prod) + '</b>' +
       '<span class="jstatus ' + (j.status === 'done' ? 'done">DONE ✅' : 'pend">RENDERING') + '</span></div>';
@@ -273,7 +350,7 @@
 
     if (j.status === 'done' && j.photo_data) {
       return '<div class="job">' + head +
-        '<div class="theater" id="th-' + j.id + '">' +
+        '<div class="theater ' + ar.cls + '" id="th-' + j.id + '">' +
           '<img src="' + j.photo_data + '" alt="">' +
           '<div class="vignette"></div>' +
           '<div class="tscene t1">' + esc(scenes[0]) + '</div>' +
@@ -283,7 +360,7 @@
           '<button class="playbtn" data-id="' + j.id + '">▶ Play</button>' +
           '<span class="mockbadge">MOCK</span>' +
         '</div>' +
-        '<div class="jmeta">' + esc(p.label) + ' · ' + stamp + ' · cost 0 credits · 🔊 voice</div>' +
+        '<div class="jmeta">' + esc(p.label) + ' · ' + stamp + ' · ' + ar.label + ' · cost 0 credits · 🔊 voice</div>' +
         xbtns +
       '</div>';
     }
@@ -355,7 +432,9 @@
 
     var p = PRESETS[j.preset] || PRESETS.hot;
     var prod = (j.prompt || '').split(' — ')[0] || 'your product';
-    var scenes = p.scenes.map(function(t){ return t.replace('{P}', prod); });
+    var scenes = jobScenes(j);
+    var ar = ASPECT[j.aspect] || ASPECT['45'];
+    var W = ar.W, H = ar.H;
 
     var img = null;
     if (j.photo_data) {
@@ -367,7 +446,6 @@
       });
     }
 
-    var W = 720, H = 900;
     var cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d');
@@ -414,7 +492,7 @@
       ctx.textAlign = 'center';
       for (var i = 0; i < 3; i++) {
         var a = wins[i][0], b = wins[i][1];
-        if (t >= a && t <= b) {
+        if (t >= a && t <= b && scenes[i]) {
           var al = Math.min(1, (t - a)/250, (b - t)/250);
           ctx.globalAlpha = Math.max(0, al);
           ctx.fillStyle = '#ffe9a8';
@@ -507,7 +585,7 @@
     if (!u) return;
 
     var r = await client.from('studio_jobs')
-      .select('id, preset, prompt, status, is_mock, created_at, photo_data')
+      .select('id, preset, prompt, status, is_mock, created_at, photo_data, scenes_json, aspect')
       .eq('creator_id', u.id)
       .eq('kind', 'video')
       .order('created_at', { ascending: false })
