@@ -21,10 +21,11 @@
     weekend: { emoji:'🎉', label:'Weekend Special',
                scenes:['🎉 The weekend special is live!','📸 Treat yourself to {P}.','🛒 Order before Sunday night!'] }
   };
-  var ASPECT = {
+    var ASPECT = {
     '916': { cls:'ar916', W:720, H:1280, label:'TikTok' },
     '45':  { cls:'ar45',  W:720, H:900,  label:'Feed' },
-    '11':  { cls:'ar11',  W:800, H:800,  label:'Square' }
+    '11':  { cls:'ar11',  W:800, H:800,  label:'Square' },
+    '169': { cls:'ar169', W:1280, H:720, label:'Wide' }
   };
   var pick = 'hot';
   var shape = '916';
@@ -98,8 +99,9 @@
              '" data-k="' + k + '">' + PRESETS[k].emoji + ' ' + PRESETS[k].label + '</button>';
     }).join('');
 
-    var shapes = Object.keys(ASPECT).map(function(k){
-      var lbl = k === '916' ? '📱 TikTok' : (k === '45' ? '🖼️ Feed 4:5' : '⬜ Square');
+    var shapes = Object.keys(ASPECT).map(function(k){      var lbl = k === '916' ? '📱 TikTok'
+              : (k === '45'  ? '🖼️ Feed 4:5'
+              : (k === '169' ? '🖥️ Wide 16:9' : '⬜ Square'));
       return '<button class="pchip' + (k === shape ? ' sel' : '') +
              '" data-a="' + k + '">' + lbl + '</button>';
     }).join('');
