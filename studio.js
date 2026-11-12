@@ -306,7 +306,7 @@
   async function callBrain(payload){
     var r;
     try {
-      r = await client.functions.invoke('lion-brain', { body: payload });
+            r = await client.functions.invoke('lion-generate', { body: payload });
     } catch(e) {
       return { error: (e && e.message) || 'no answer from the brain' };
     }
