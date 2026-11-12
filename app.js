@@ -95,23 +95,42 @@
     await client.from('studio_jobs').delete().eq('id', r2.data.id);
     sWrite.textContent = 'WRITE+CLEAN ✅'; sWrite.className = 'ok';
   })();
-
-  // Brain probe — is the server room answering?
+  // Brain probe — knock on lion-generate's heartbeat door.
+  // Signed out: SLEEPING 💤. Signed in: also reads your
+  // real wallet balance through the bridge door.
   var sBrain = document.getElementById('s-brain');
   if (sBrain) {
     (async function(){
+      var url = window.LION.SUPABASE_URL + '/functions/v1/lion-generate';
       try {
-        var r = await client.functions.invoke('lion-brain', { body: { action: 'ping' } });
-        if (r.error) throw new Error('no answer');
-        if (r.data && r.data.awake) {
-          sBrain.textContent = 'AWAKE 🧠'; sBrain.className = 'ok';
+        var r = await fetch(url);
+        var j = await r.json();
+        if (!(j && j.ok && j.pong)) throw new Error('no answer');
+        var extra = '';
+        try {
+          var s = await client.auth.getSession();
+          var tok = (s.data && s.data.session) ? s.data.session.access_token : null;
+          if (tok) {
+            var r2 = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json',
+                         'Authorization': 'Bearer ' + tok },
+              body: JSON.stringify({ ping: false })
+            });
+            var j2 = await r2.json();
+            if (j2 && j2.ok) extra = ' · wallet ' + j2.balance + ' · cost ' + j2.cost_per_video + '/video';
+          }
+        } catch (e2) { /* heartbeat alone still counts */ }
+        if (j.brain === 'awake') {
+          sBrain.textContent = 'AWAKE 🧠' + extra;
+          sBrain.className = 'ok';
         } else {
-          sBrain.textContent = 'SLEEPING 💤'; sBrain.className = 'warn';
+          sBrain.textContent = 'SLEEPING 💤' + extra;
+          sBrain.className = 'warn';
         }
-      } catch(e) {
+      } catch (e) {
         sBrain.textContent = 'NOT DEPLOYED ❌'; sBrain.className = 'bad';
       }
     })();
   }
-
-})();
+  
