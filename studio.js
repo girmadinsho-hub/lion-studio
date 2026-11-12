@@ -1,11 +1,14 @@
 /* ==========================================
-   LION STUDIO — studio.js (Polish Edition)
-   Block 12: camera moves, delete, deep gallery.
+   LION STUDIO — studio.js (Sleeping Brain)
+   Block 13: real-AI pipeline, pre-wired.
+   It sleeps until window.LION.AI.LIVE = true.
    ========================================== */
 (function(){
   var client = window.lionClient;
   var body = document.getElementById('studio-body');
   if (!client || !body) return;
+
+  var AI = (window.LION && window.LION.AI) ? window.LION.AI : { LIVE: false, PRICE: 10 };
 
   var PRESETS = {
     hot:     { emoji:'🔥', label:'Hot Deal',
@@ -35,6 +38,7 @@
   var pick = 'hot';
   var shape = '916';
   var cam = 'zoom';
+  var brain = 'mock';
   var photoData = null;
   var jobsById = {};
   var shop = { name: '', contact: '' };
@@ -57,6 +61,14 @@
   async function me(){
     var s = await client.auth.getSession();
     return (s.data && s.data.session) ? s.data.session.user : null;
+  }
+
+  function prodOf(j){
+    return (j.prompt || '').split(' — ')[0] || 'your product';
+  }
+
+  function slugOf(j){
+    return prodOf(j).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'ad';
   }
 
   function presetLines(key, prod){
@@ -87,8 +99,15 @@
         if (arr && arr.length === 3) return arr.map(String);
       } catch(e){}
     }
-    var prod = (j.prompt || '').split(' — ')[0] || 'your product';
-    return presetLines(j.preset, prod);
+    return presetLines(j.preset, prodOf(j));
+  }
+
+  function updateGoBtn(){
+    var go = document.getElementById('st-go');
+    if (!go) return;
+    go.textContent = (brain === 'real')
+      ? ('🧠 Generate — ' + AI.PRICE + ' credits')
+      : '✨ Generate — FREE (mock)';
   }
 
   function renderOut(){
@@ -119,6 +138,8 @@
              '" data-c="' + k + '">' + CAMS[k].label + '</button>';
     }).join('');
 
+    var realLbl = AI.LIVE ? ('🧠 Real AI — ' + AI.PRICE + ' credits') : '🧠 Real AI — 💤 sleeping';
+
     body.innerHTML =
       '<div class="card">' +
         '<h2>🏪 My shop</h2>' +
@@ -130,6 +151,11 @@
       '</div>' +
       '<div class="card">' +
         '<h2>🎬 New video ad</h2>' +
+        '<p class="hint">brain:</p>' +
+        '<div class="chips" id="st-brain">' +
+          '<button class="pchip' + (brain === 'mock' ? ' sel' : '') + '" data-b="mock">🎭 Mock — FREE</button>' +
+          '<button class="pchip' + (brain === 'real' ? ' sel' : '') + (AI.LIVE ? '' : ' lock') + '" data-b="real">' + realLbl + '</button>' +
+        '</div>' +
         '<div class="chips" id="st-chips">' + chips + '</div>' +
         '<input id="st-name" maxlength="60" placeholder="product name — e.g. leather handbag">' +
         '<textarea id="st-desc" maxlength="200" placeholder="one or two lines about it (optional)"></textarea>' +
@@ -147,14 +173,31 @@
           '<img id="st-thumb-img" alt="product">' +
           '<button class="linkbtn" id="st-photo-rm">✕ remove photo</button>' +
         '</div>' +
-        '<button class="btn" id="st-go">✨ Generate — FREE (mock)</button>' +
+        '<button class="btn" id="st-go">✨ Generate</button>' +
         '<div id="st-msg"></div>' +
-        '<p style="font-size:11px;color:#6f6a5e">Mock mode: fake brain, real flow. Costs 0 credits.<br>Tip: while exporting a video, keep the app on screen — it films live.</p>' +
+        '<p style="font-size:11px;color:#6f6a5e">Mock mode: fake brain, real flow. Real AI wakes in Block 14.<br>Tip: while exporting a mock video, keep the app on screen — it films live.</p>' +
       '</div>' +
       '<div class="card">' +
         '<h2>🎞️ Recent renders</h2>' +
         '<div id="st-jobs"><p>Loading…</p></div>' +
       '</div>';
+
+    document.getElementById('st-brain').addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.pchip') : null;
+      if (!b) return;
+      var mode = b.getAttribute('data-b');
+      if (mode === 'real' && !AI.LIVE) {
+        document.getElementById('st-msg').textContent =
+          '💤 The real brain sleeps until the wallet is funded — Block 14 wakes it.';
+        return;
+      }
+      brain = mode;
+      var all = document.querySelectorAll('#st-brain .pchip');
+      for (var i = 0; i < all.length; i++) all[i].classList.remove('sel');
+      b.classList.add('sel');
+      document.getElementById('st-msg').textContent = '';
+      updateGoBtn();
+    });
 
     document.getElementById('st-chips').addEventListener('click', function(e){
       var b = e.target.closest ? e.target.closest('.pchip') : null;
@@ -197,6 +240,7 @@
     });
 
     fillLines();
+    updateGoBtn();
     document.getElementById('st-go').addEventListener('click', generate);
     document.getElementById('sh-save').addEventListener('click', saveShop);
     loadJobs();
@@ -259,12 +303,70 @@
     renderIn();
   }
 
+  async function callBrain(payload){
+    var r;
+    try {
+      r = await client.functions.invoke('lion-brain', { body: payload });
+    } catch(e) {
+      return { error: (e && e.message) || 'no answer from the brain' };
+    }
+    if (r && r.error) {
+      var m = r.error.message || 'the brain refused';
+      try {
+        if (r.error.context && r.error.context.json) {
+          var j = await r.error.context.json();
+          if (j && j.error) m = j.error;
+        }
+      } catch(e2) {}
+      return { error: m };
+    }
+    return r;
+  }
+
+  function pollReal(jobId){
+    var tries = 0;
+    async function step(){
+      tries++;
+      var r = await callBrain({ action: tries === 1 ? 'start' : 'check', jobId: jobId });
+      if (r.error) {
+        await client.from('studio_jobs')
+          .update({ status: 'failed', error: String(r.error).slice(0,180) })
+          .eq('id', jobId);
+        var msgEl = document.getElementById('st-msg');
+        if (msgEl) msgEl.textContent = '❌ ' + String(r.error).slice(0,120);
+        loadJobs();
+        return;
+      }
+      var d = r.data || {};
+      if (d.status === 'done' || d.status === 'failed') { loadJobs(); return; }
+      var el = document.getElementById('jl-' + jobId);
+      if (el) {
+        var phase = d.status === 'IN_PROGRESS' ? 'The real brain is painting your video…'
+                  : d.status === 'IN_QUEUE'     ? 'Waiting in the AI factory queue…'
+                  : 'Talking to the AI factory…';
+        el.textContent = '🧠 ' + phase + ' (1–3 min)';
+      }
+      if (tries >= 60) { loadJobs(); return; }
+      setTimeout(step, 5000);
+    }
+    step();
+  }
+
   async function generate(){
     var msg  = document.getElementById('st-msg');
     var go   = document.getElementById('st-go');
     var name = document.getElementById('st-name').value.trim();
     var desc = document.getElementById('st-desc').value.trim();
     if (!name) { msg.textContent = '❌ Give your product a name first.'; return; }
+
+    if (brain === 'real' && !AI.LIVE) {
+      msg.textContent = '💤 The real brain sleeps until the wallet is funded — Block 14 wakes it.';
+      return;
+    }
+    if (brain === 'real' && !photoData) {
+      msg.textContent = '❌ The real brain needs a product photo — add one above.';
+      return;
+    }
 
     var lines = ['st-l1','st-l2','st-l3'].map(function(id){
       return document.getElementById(id).value.trim();
@@ -274,7 +376,7 @@
     go.disabled = true; go.textContent = '⏳ Working…';
     var u = await me();
     if (!u) {
-      go.disabled = false; go.textContent = '✨ Generate — FREE (mock)';
+      go.disabled = false; updateGoBtn();
       msg.textContent = '❌ Please sign in on the Home tab first.';
       return;
     }
@@ -286,9 +388,9 @@
       preset: pick,
       prompt: prompt,
       status: 'pending',
-      provider: 'mock',
-      credits_cost: 0,
-      is_mock: true,
+      provider: brain === 'real' ? 'fal' : 'mock',
+      credits_cost: brain === 'real' ? AI.PRICE : 0,
+      is_mock: brain !== 'real',
       scenes_json: JSON.stringify(lines),
       aspect: shape,
       camera: cam
@@ -298,7 +400,7 @@
     var r = await client.from('studio_jobs').insert(row).select('id').single();
 
     if (r.error) {
-      go.disabled = false; go.textContent = '✨ Generate — FREE (mock)';
+      go.disabled = false; updateGoBtn();
       msg.textContent = '❌ ' + r.error.message;
       return;
     }
@@ -306,6 +408,13 @@
 
     await loadJobs();
     var jobId = r.data.id;
+
+    if (brain === 'real') {
+      go.disabled = false; updateGoBtn();   /* real renders run in the background */
+      pollReal(jobId);
+      return;
+    }
+
     var lines2 = ['Writing the script…','Casting the light…','Rendering scenes…'];
     var i = 0;
     var el = document.getElementById('jl-' + jobId);
@@ -321,7 +430,7 @@
       await client.from('studio_jobs')
         .update({ status: 'done', result_url: 'mock://preview' })
         .eq('id', jobId);
-      go.disabled = false; go.textContent = '✨ Generate — FREE (mock)';
+      go.disabled = false; updateGoBtn();
       loadJobs();
     }, 7000);
   }
@@ -340,8 +449,6 @@
     if (!th) return;
     var j = jobsById[id];
     if (!j) return;
-    var p = PRESETS[j.preset] || PRESETS.hot;
-    var prod = (j.prompt || '').split(' — ')[0] || 'your product';
     var scenes = jobScenes(j);
     var btn = th.querySelector('.playbtn');
 
@@ -362,7 +469,7 @@
 
   function cardHTML(j){
     var p = PRESETS[j.preset] || PRESETS.hot;
-    var prod = (j.prompt || '').split(' — ')[0] || 'your product';
+    var prod = prodOf(j);
     var stamp = when(j.created_at);
     var scenes = jobScenes(j);
     var ar = ASPECT[j.aspect] || ASPECT['45'];
@@ -370,12 +477,46 @@
     var camLbl = CAMS[j.camera] ? CAMS[j.camera].label : '🔍 Zoom In';
 
     var head = '<div class="top"><b>' + p.emoji + ' ' + esc(prod) + '</b>' +
-      '<span class="jstatus ' + (j.status === 'done' ? 'done">DONE ✅' : 'pend">RENDERING') + '</span></div>';
+      '<span class="jstatus ' + (j.status === 'done' ? 'done">DONE ✅'
+        : (j.status === 'failed' ? 'fail">FAILED ❌' : 'pend">RENDERING')) + '</span></div>';
+
+    var delBtn = '<button class="xbtn del" data-act="del" data-id="' + j.id + '">🗑️</button>';
+
+    /* ---- Real AI jobs ---- */
+    if (j.provider === 'fal') {
+      if (j.status === 'done' && j.result_url) {
+        return '<div class="job">' + head +
+          '<video class="rvideo" src="' + esc(j.result_url) + '" controls playsinline loop></video>' +
+          '<div class="jmeta">' + esc(p.label) + ' · ' + stamp + ' · ' + ar.label +
+            ' · cost ' + (j.credits_cost || AI.PRICE) + ' credits · 🧠 REAL</div>' +
+          '<div class="xbtns">' +
+            '<button class="xbtn" data-act="save" data-id="' + j.id + '">⬇️ Save</button>' +
+            '<button class="xbtn" data-act="share" data-id="' + j.id + '">📤 Share</button>' +
+            delBtn +
+          '</div>' +
+        '</div>';
+      }
+      if (j.status === 'failed') {
+        return '<div class="job">' + head +
+          '<div class="jmeta">❌ ' + esc(j.error || 'the render failed') + '</div>' +
+          '<div class="jmeta">Credits are refunded automatically when the factory fails.</div>' +
+          '<div class="xbtns">' + delBtn + '</div>' +
+        '</div>';
+      }
+      return '<div class="job">' + head +
+        '<div class="jmeta" id="jl-' + j.id + '">🧠 Summoning the real brain…</div>' +
+        '<div class="jmeta">' + esc(p.label) + ' · real AI render in progress</div>' +
+        '<div class="xbtns">' +
+          '<button class="xbtn" data-act="chk" data-id="' + j.id + '">🔄 Check</button>' +
+          delBtn +
+        '</div>' +
+      '</div>';
+    }
 
     var xbtns = '<div class="xbtns">' +
       '<button class="xbtn" data-act="save" data-id="' + j.id + '">⬇️ Save</button>' +
       '<button class="xbtn" data-act="share" data-id="' + j.id + '">📤 Share</button>' +
-      '<button class="xbtn del" data-act="del" data-id="' + j.id + '">🗑️</button>' +
+      delBtn +
     '</div>';
 
     if (j.status === 'done' && j.photo_data) {
@@ -411,7 +552,7 @@
     '</div>';
   }
 
-  /* ---------- The film camera ---------- */
+  /* ---------- The film camera (mock exports) ---------- */
 
   function pickMime(){
     var list = ['video/mp4;codecs=avc1.42E01E','video/mp4',
@@ -442,6 +583,16 @@
     setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
   }
 
+  async function saveRemote(url, fname){
+    try {
+      var res = await fetch(url);
+      var blob = await res.blob();
+      downloadBlob(blob, fname);
+    } catch(e) {
+      window.open(url, '_blank');
+    }
+  }
+
   function setBtns(id, text, disabled){
     ['xs-', 'xh-', 'xd-'].forEach(function(p){
       var b = document.getElementById(p + id);
@@ -461,7 +612,7 @@
     }
 
     var p = PRESETS[j.preset] || PRESETS.hot;
-    var prod = (j.prompt || '').split(' — ')[0] || 'your product';
+    var prod = prodOf(j);
     var scenes = jobScenes(j);
     var ar = ASPECT[j.aspect] || ASPECT['45'];
     var camMode = CAMS[j.camera] ? j.camera : 'zoom';
@@ -600,8 +751,7 @@
 
     var blob = new Blob(chunks, { type: mime.split(';')[0] });
     var ext = mime.indexOf('mp4') > -1 ? 'mp4' : 'webm';
-    var slug = prod.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'ad';
-    var fname = 'lion-' + slug + '.' + ext;
+    var fname = 'lion-' + slugOf(j) + '.' + ext;
 
     if (blob.size < 5000) {
       setBtns(id, '', false);
@@ -628,7 +778,7 @@
     if (!u) return;
 
     var r = await client.from('studio_jobs')
-      .select('id, preset, prompt, status, is_mock, created_at, photo_data, scenes_json, aspect, camera')
+      .select('id, preset, prompt, status, is_mock, created_at, photo_data, scenes_json, aspect, camera, provider, result_url, error, credits_cost')
       .eq('creator_id', u.id)
       .eq('kind', 'video')
       .order('created_at', { ascending: false })
@@ -688,7 +838,19 @@
         return;
       }
 
+      if (act === 'chk') {
+        xb.disabled = true; xb.textContent = '⏳';
+        await callBrain({ action: 'check', jobId: id });
+        loadJobs();
+        return;
+      }
+
       if (act === 'save') {
+        var jS = jobsById[id];
+        if (jS && jS.provider === 'fal' && jS.result_url) {
+          saveRemote(jS.result_url, 'lion-' + slugOf(jS) + '.mp4');
+          return;
+        }
         makeVideo(id).then(function(){
           var ps = pendingShare[id];
           if (ps) downloadBlob(ps.blob, ps.fname);
@@ -697,6 +859,17 @@
       }
 
       if (act === 'share') {
+        var jH = jobsById[id];
+        if (jH && jH.provider === 'fal' && jH.result_url) {
+          if (navigator.share) {
+            try {
+              await navigator.share({ title: prodOf(jH), text: jobScenes(jH)[2], url: jH.result_url });
+            } catch(e) {}
+          } else {
+            window.open(jH.result_url, '_blank');
+          }
+          return;
+        }
         var ps2 = pendingShare[id];
         if (ps2) {
           delete pendingShare[id];
@@ -721,3 +894,4 @@
 
   refresh();
 })();
+
