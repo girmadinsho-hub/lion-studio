@@ -1,7 +1,8 @@
 /* ==========================================
-   LION STUDIO — studio.js (Sleeping Brain)
-   Block 13: real-AI pipeline, pre-wired.
-   It sleeps until window.LION.AI.LIVE = true.
+   LION STUDIO — studio.js (v1.0 Champion Edition)
+   Real-AI pipeline, pre-wired. It sleeps until
+   the captain funds the fal.ai wallet — then
+   The Awakening (window.LION.AI.LIVE = true).
    ========================================== */
 (function(){
   var client = window.lionClient;
@@ -175,7 +176,7 @@
         '</div>' +
         '<button class="btn" id="st-go">✨ Generate</button>' +
         '<div id="st-msg"></div>' +
-        '<p style="font-size:11px;color:#6f6a5e">Mock mode: fake brain, real flow. Real AI wakes in Block 14.<br>Tip: while exporting a mock video, keep the app on screen — it films live.</p>' +
+        '<p style="font-size:11px;color:#6f6a5e">Mock mode: fake brain, real flow. Real AI wakes when the wallet is funded.<br>Tip: while exporting a mock video, keep the app on screen — it films live.</p>' +
       '</div>' +
       '<div class="card">' +
         '<h2>🎞️ Recent renders</h2>' +
@@ -188,7 +189,7 @@
       var mode = b.getAttribute('data-b');
       if (mode === 'real' && !AI.LIVE) {
         document.getElementById('st-msg').textContent =
-          '💤 The real brain sleeps until the wallet is funded — Block 14 wakes it.';
+          '💤 The real brain sleeps until the wallet is funded — The Awakening will wake it.';
         return;
       }
       brain = mode;
@@ -306,7 +307,7 @@
   async function callBrain(payload){
     var r;
     try {
-            r = await client.functions.invoke('lion-generate', { body: payload });
+      r = await client.functions.invoke('lion-generate', { body: payload });
     } catch(e) {
       return { error: (e && e.message) || 'no answer from the brain' };
     }
@@ -360,7 +361,7 @@
     if (!name) { msg.textContent = '❌ Give your product a name first.'; return; }
 
     if (brain === 'real' && !AI.LIVE) {
-      msg.textContent = '💤 The real brain sleeps until the wallet is funded — Block 14 wakes it.';
+      msg.textContent = '💤 The real brain sleeps until the wallet is funded — The Awakening will wake it.';
       return;
     }
     if (brain === 'real' && !photoData) {
@@ -894,4 +895,3 @@
 
   refresh();
 })();
-
