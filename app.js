@@ -122,6 +122,7 @@
           }
         } catch (e2) { /* heartbeat alone still counts */ }
         if (j.brain === 'awake') {
+          if (window.LION.AI) { window.LION.AI.LIVE = true; }
           sBrain.textContent = 'AWAKE 🧠' + extra;
           sBrain.className = 'ok';
         } else {
