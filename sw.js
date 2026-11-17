@@ -2,7 +2,7 @@
    LION STUDIO — sw.js
    ⚠️ RITUAL LAW: every deploy = version +1
    ========================================== */
-var CACHE_NAME = 'lion-studio-v22';
+var CACHE_NAME = 'lion-studio-v23';
 var ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,8 @@ var ASSETS = [
     './director.js',
     './clients.js',
     './portfolio.js',
-  './backup.js',
+    './backup.js',
+  './earnings.js',
   './config.js',
   './manifest.json',
   './icon.svg',
