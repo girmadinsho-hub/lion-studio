@@ -16,7 +16,8 @@
   var navBtn = document.createElement('button');
   navBtn.id  = 'nav-director';
   navBtn.innerHTML = '<span class="ic">🎞️</span>Director';
-  nav.appendChild(navBtn);
+navBtn.onclick = function(){ window.lionGo('director'); };
+nav.appendChild(navBtn);
 
   var sec = document.createElement('section');
   sec.id = 'tab-director';
