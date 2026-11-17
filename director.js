@@ -117,6 +117,46 @@ nav.appendChild(navBtn);
   function imgPrompt(i){ return charBlock.trim() + ', ' + shots[i].scene; }
   function motPrompt(i){ return shots[i].scene + ', ' + CAMS[i % CAMS.length] + ', cinematic lighting, smooth natural motion, 5 seconds'; }
 
+  // ---------- BLOCK 19: caption studio ----------
+  var LS_BRAND = 'lion_director_brand';
+
+  var BRAND_DEFAULT = { shop: '', phone: '', city: '', tg: '' };
+  var brand = BRAND_DEFAULT;
+  try { brand = JSON.parse(load(LS_BRAND, '{}')) || BRAND_DEFAULT; } catch(e){ brand = BRAND_DEFAULT; }
+
+  var HOOKS = [
+    'Why is everyone talking about this?',
+    'You need to see this 👇',
+    'Stop scrolling — this changes everything.',
+    'This is what smart buyers choose.',
+    'POV: you found the best shop in town.'
+  ];
+  var TAGS_A = ['#Ethiopia', '#AddisAbaba', '#TikTokEthiopia', '#EthiopiaTikTok'];
+  var TAGS_B = ['#shop', '#newarrivals', '#bestprice', '#foryou', '#fyp'];
+
+  function captionText(){
+    var hook = HOOKS[Math.floor(Math.random() * HOOKS.length)];
+    var doneScenes = shots.filter(function(s){ return s.done; }).map(function(s){ return s.scene; });
+    var story = doneScenes.length ? doneScenes[0] : 'Our new video is live';
+    var lines = [];
+    lines.push(hook);
+    lines.push('');
+    lines.push('🎬 ' + story);
+    if (brand.shop) lines.push('🏪 ' + brand.shop);
+    if (brand.city) lines.push('📍 ' + brand.city);
+    if (brand.phone) lines.push('📞 ' + brand.phone);
+    if (brand.tg) lines.push('✈️ ' + brand.tg);
+    lines.push('');
+    lines.push(TAGS_A.slice(0, 3).join(' ') + ' ' + TAGS_B.join(' '));
+    return lines.join('\n');
+  }
+
+  function renderCaption(){
+    var el = document.getElementById('d-caption-out');
+    if (!el) return;
+    el.value = captionText();
+  }
+
   // ---------- build the UI ----------
   sec.innerHTML = ''
     + '<div class="card">'
@@ -146,10 +186,24 @@ nav.appendChild(navBtn);
     +   '<div id="d-planner"></div>'
     +   '<div class="hint">Estimates only — always check the real price on Kling\'s screen before you press Generate. Free credits reset at midnight.</div>'
     + '</div>'
+    + '<div class="card">'
+    +   '<h2>4 · Caption studio</h2>'
+    +   '<div class="hint">Your brand — saved once, stamped on every caption.</div>'
+    +   '<input id="d-b-shop" placeholder="shop name (e.g. Smart Shop)">'
+    +   '<input id="d-b-phone" placeholder="phone (e.g. 09xx...)" inputmode="tel">'
+    +   '<input id="d-b-city" placeholder="city / area (e.g. Addis Ababa, Merkato)">'
+    +   '<input id="d-b-tg" placeholder="telegram (e.g. @yourchannel)">'
+    +   '<button class="btn ghost" id="d-brand-save">Save brand</button>'
+    +   '<div class="lab" style="margin:14px 0 6px">Your ready caption</div>'
+    +   '<textarea id="d-caption-out" style="min-height:130px"></textarea>'
+    +   '<div class="xbtns">'
+    +     '<button class="xbtn" id="d-cap-new">🎲 New hook</button>'
+    +     '<button class="xbtn" id="d-cap-copy">📋 Copy caption</button>'
+    +   '</div>'
+    + '</div>'
     + '<div id="d-shots-wrap"></div>'
     + '<button class="morebtn" id="d-reset">🗑 Reset director (clears saved shots)</button>'
     + '<div style="height:20px"></div>';
-
   // ---------- render ----------
   function line(k, v){ return '<div class="line"><span>' + k + '</span><b>' + v + '</b></div>'; }
 
@@ -273,6 +327,31 @@ nav.appendChild(navBtn);
       var i = +k; shots[i].done = !shots[i].done; persist(); render();
     }
   });
+
+    document.getElementById('d-b-shop').value = brand.shop || '';
+  document.getElementById('d-b-phone').value = brand.phone || '';
+  document.getElementById('d-b-city').value = brand.city || '';
+  document.getElementById('d-b-tg').value = brand.tg || '';
+  renderCaption();
+
+  document.getElementById('d-brand-save').onclick = function(){
+    brand = {
+      shop:  document.getElementById('d-b-shop').value.trim(),
+      phone: document.getElementById('d-b-phone').value.trim(),
+      city:  document.getElementById('d-b-city').value.trim(),
+      tg:    document.getElementById('d-b-tg').value.trim()
+    };
+    save(LS_BRAND, JSON.stringify(brand));
+    var b = this; b.textContent = 'SAVED ✅';
+    setTimeout(function(){ b.textContent = 'Save brand'; }, 1200);
+    renderCaption();
+  };
+
+  document.getElementById('d-cap-new').onclick = renderCaption;
+
+  document.getElementById('d-cap-copy').onclick = function(){
+    copyPrompt(document.getElementById('d-caption-out').value, this);
+  };
 
   document.getElementById('d-reset').onclick = function(){
     if (!shots.length || confirm('Clear all saved shots?')) {
