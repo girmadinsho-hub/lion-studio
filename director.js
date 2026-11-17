@@ -157,6 +157,56 @@ nav.appendChild(navBtn);
     el.value = captionText();
   }
 
+    // ---------- BLOCK 20: subtitle builder ----------
+  var LS_SUBS = 'lion_director_subs';
+  var subs = {};
+  try { subs = JSON.parse(load(LS_SUBS, '{}')) || {}; } catch(e){ subs = {}; }
+  function saveSubs(){ save(LS_SUBS, JSON.stringify(subs)); }
+  function subText(i){
+    var o = subs[i];
+    if (o !== undefined && o !== null && String(o).trim() !== '') return String(o).trim();
+    return shots[i] ? shots[i].scene : '';
+  }
+  function srtTime(sec){
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    var s = sec % 60;
+    function p(n, w){ n = String(n); while (n.length < w) n = '0' + n; return n; }
+    return p(h,2) + ':' + p(m,2) + ':' + p(s,2) + ',000';
+  }
+  function buildSRT(){
+    var out = '';
+    for (var i = 0; i < shots.length; i++) {
+      out += (i + 1) + '\n';
+      out += srtTime(i * 5) + ' --> ' + srtTime(i * 5 + 5) + '\n';
+      out += subText(i).replace(/\s*\n\s*/g, ' ') + '\n\n';
+    }
+    return out.trim() + '\n';
+  }
+  function renderSubs(){
+    var w = document.getElementById('d-subs-wrap');
+    if (!w) return;
+    if (String(subs._n) !== String(shots.length)) {
+      subs = { _n: shots.length }; saveSubs();
+    }
+    if (!shots.length) { w.innerHTML = '<div class="hint">No shots yet — build your story above first.</div>'; return; }
+    var html = '';
+    for (var i = 0; i < shots.length; i++) {
+      html += '<div class="lab" style="margin:10px 0 4px">SHOT ' + (i + 1) + ' · ' + srtTime(i * 5).slice(3,8) + '–' + srtTime(i * 5 + 5).slice(3,8) + '</div>'
+        + '<input data-sub="' + i + '" value="' + esc(subText(i)) + '">';
+    }
+    w.innerHTML = html + '<div class="hint">Total: ' + srtTime(shots.length * 5).slice(3,8) + ' of timed video</div>';
+  }
+  function downloadSRT(){
+    if (!shots.length) { alert('No shots yet.'); return; }
+    var blob = new Blob([buildSRT()], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'lion-subtitles.srt';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
+  }
+
   // ---------- build the UI ----------
   sec.innerHTML = ''
     + '<div class="card">'
@@ -202,6 +252,16 @@ nav.appendChild(navBtn);
     +   '</div>'
     + '</div>'
     + '<div id="d-shots-wrap"></div>'
+    + '<div class="card">'
+    +   '<h2>5 · Subtitle builder</h2>'
+    +   '<div class="hint">One subtitle per shot, 5 seconds each — matched to your Kling clips. Edit the text, it saves automatically.</div>'
+    +   '<div id="d-subs-wrap"></div>'
+    +   '<div class="xbtns">'
+    +     '<button class="xbtn" id="d-srt-dl">⬇️ Download .srt</button>'
+    +     '<button class="xbtn" id="d-srt-copy">📋 Copy subtitles</button>'
+    +   '</div>'
+    +   '<div class="hint">Import the .srt file in CapCut (PC or online) or VN Editor — timed captions in one tap. On CapCut mobile, use Copy if import is missing.</div>'
+    + '</div>'
     + '<button class="morebtn" id="d-reset">🗑 Reset director (clears saved shots)</button>'
     + '<div style="height:20px"></div>';
   // ---------- render ----------
@@ -259,9 +319,10 @@ nav.appendChild(navBtn);
     }).join('');
   }
 
-  function render(){
+    function render(){
     document.getElementById('d-planner').innerHTML = plannerHTML();
     document.getElementById('d-shots-wrap').innerHTML = shotsHTML();
+    renderSubs();
   }
 
   // ---------- actions ----------
@@ -349,8 +410,22 @@ nav.appendChild(navBtn);
 
   document.getElementById('d-cap-new').onclick = renderCaption;
 
-  document.getElementById('d-cap-copy').onclick = function(){
+    document.getElementById('d-cap-copy').onclick = function(){
     copyPrompt(document.getElementById('d-caption-out').value, this);
+  };
+
+  document.getElementById('d-subs-wrap').addEventListener('input', function(e){
+    var i = e.target.getAttribute && e.target.getAttribute('data-sub');
+    if (i === null || i === false || i === undefined) return;
+    subs[i] = e.target.value;
+    saveSubs();
+  });
+
+  document.getElementById('d-srt-dl').onclick = downloadSRT;
+
+  document.getElementById('d-srt-copy').onclick = function(){
+    if (!shots.length) { alert('No shots yet.'); return; }
+    copyPrompt(buildSRT(), this);
   };
 
   document.getElementById('d-reset').onclick = function(){
