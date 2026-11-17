@@ -172,9 +172,14 @@
     var t = e.target;
     var cyc = t.getAttribute && t.getAttribute('data-cycle');
     var del = t.getAttribute && t.getAttribute('data-del');
-    if (cyc) {
+        if (cyc) {
       for (var i = 0; i < orders.length; i++) {
-        if (orders[i].id === cyc) { orders[i].status = nextStatus(orders[i].status); break; }
+        if (orders[i].id === cyc) {
+          orders[i].status = nextStatus(orders[i].status);
+          if (orders[i].status === 'paid') orders[i].paidAt = Date.now();
+          else delete orders[i].paidAt;
+          break;
+        }
       }
       persist(); render();
     } else if (del) {
